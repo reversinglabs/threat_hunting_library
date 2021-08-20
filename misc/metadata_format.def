@@ -1,0 +1,285 @@
+{
+  sample_info: {
+    md5         : str,
+    sha1        : str,
+    sha256      : str,
+    ssdeep      : str,
+    imphash     : str
+
+    filename    : str,
+    sample_type : str,
+    sample_size : int,
+    description : str,     # story from TC
+    extracted   : int,
+
+    uri : [
+      {
+        category : str,    # possible values -> static_strings, sources, dynamic_analysis, malware configuration
+        type     : str,    # possible values -> http, mailto, ipv4, ipv6, ftp
+        value    : str,    # e.g. www.reversinglabs.com
+      }
+    ]
+
+    pe: {
+      compile_time      : int,
+      company_name      : str,
+      product_name      : str,
+      original_name     : str,
+      section           : [
+        {
+          sha1 : str,
+          name : str
+        }
+      ],
+      resource : [
+        {
+          sha1 : str,
+          type : str,
+          name : str
+        }
+      ],
+      net_mvid : str,           # .NET module id
+      pdb_path : [],
+      export   : [],            # list of export apis, e.g. [__GetExceptDLLinfo, @@Formmain@Initialize]
+      import   : {
+        <import_name> : []      # e.g. kernel32.dll: [lstrcpy]
+      }
+    },
+    document: {
+      author            : str,
+      language          : str,
+      title             : str,
+      subject           : str,
+      description       : str,
+      creation_date     : str,
+      modified_date     : str,
+      version           : str,
+      pages             : int,
+      words             : int,
+      script : [    # extract from tags, metadata will be present in relationships.interesting_children
+         {
+            sha1         : str,
+            filename     : str,
+            sample_type  : str,
+            sample_size  : int,
+         }
+      ],
+    },
+    email: {
+      subject           : str,
+      sender            : str,
+      recipient         : [],
+      header : [ # (only X headers)
+         {
+            key          : str,
+            value        : str,
+         }
+      ],
+      attachment : [
+         {
+            sha1         : str,
+            filename     : str,
+            sample_type  : str,
+            sample_size  : int,
+         }
+      ],
+    },
+    static_analysis_indicators : [  # https://github.rl.lan/core/titanium_core/wiki/TitaniumCore-RICC-Documentation#indicators
+      {
+        priority    : int,
+        category    : int,
+        description : str,
+      }
+    ],
+    static_analysis_classification : {
+      propagated     : str,     # child hash if propagated
+      classification : str,     # final only
+      factor         : int,     # final only
+      result         : str,     # final only
+      scanner_result : [
+        {
+          name           : str,
+          version        : str,
+          type           : str,
+          classification : str,
+          factor         : int,
+          result         : int,
+        }
+      ]
+    },
+    dynamic_analysis_classification: [
+      {
+        name            : str,  # example: Joe Sandbox, Fireeye
+        classification  : str,  # clean, suspicious, malicious
+        result          : str,
+      },
+    ],
+    cloud_reputation : {     # direct only, no children - they may get their own direct field
+      classification       : str,
+      threat_name          : str,
+      factor               : int,
+      first_seen           : str,
+      last_seen            : str,
+      scanner_count        : int,
+      scanner_match        : int,
+      is_user_override     : boolean,
+    },
+    signer_certificate_list : [     # for possible future expansion, for now it will always contain just 1 cert
+        {
+          version              : int,
+          signature_algorithm  : str,
+          signature            : str,
+          valid_from           : str,
+          valid_to             : str,
+          serial_number        : str,
+          thumbprint_algorithm : str,
+          thumbprint           : str,
+          subject :  {
+              common_name       : str,
+              organization_name : str,
+              unit_name         : str,
+              country_name      : str, # support for future search keywords
+            },
+          issuer : {
+              common_name       : str,
+              organization_name : str,
+              unit_name         : str,
+              country_name      : str, # support for future search keywords
+            },
+          extensions : [
+            {
+              is_critical : boolean,
+              name        : str,
+              value       : str
+            }
+          ],
+        }
+    ],
+    tags : []
+    attack : []
+    relationships: {
+      parents : [    # from rldata if available, don't do it for interesting children
+        {
+          sha1 : str
+        }
+      ],
+      containers : [  # from rldata if available, don't do it for interesting children
+        {
+          sha1 : str
+        }
+      ],
+      children: [
+        {
+          # sample info, but just for first X children
+          # with either malicious/suspicious classification
+          # or with interesting sample type
+          # reduce sample info if we can - we need to be able to build threat hunting from it
+        }
+      ]
+    }
+  },
+
+  ##############################################################################################
+  cloud_hunting : [
+    {
+      query : {
+        status      : str,  # possible values -> "pending", "completed", "skipped", "failed"
+        type        : str,  # rha1, url, search, ...
+        term        : str,  # executed query string
+        description : str,  # human readable description of what the query does,
+        propagated  : str   # child hash if propagated
+      },
+      malicious         : int,  # number of malicious samples returned by the query
+      classification    : str,  # decision based on the executed query
+      description       : str,  # possible values -> "high threat", "low threat", "not enough data", "low trust", "high trust"
+      threats           : [
+        {
+          name        : str,
+          description : str,    # Atlas
+          factor      : int
+        }
+      ],   # top five threats returned in the first query page
+    }
+  ],
+  local_hunting : [],  # (same as cloud)
+
+  ##############################################################################################
+
+  readable_summary: {
+    #
+    # unlike the rest of metadata,
+    # all fields must be present event when values are null
+    #
+    classification: {
+      classification   : str,  # possible values -> "malicious", "suspicious", "undecided", "goodware"
+      description      : str,  # possible values -> "high threat", "low threat", "not enough data", "low trust", "high trust"
+      reason           : str,  # describes which hunting action triggered the result
+      threat {
+        name        : str,
+        factor      : int,
+      },
+    },
+    sample: {
+      description : str,      # storyteller
+      type        : str,
+      size        : int,
+      extracted   : int,
+      md5         : str,
+      sha1        : str,
+      sha256      : str,
+      tags        : [],
+    },
+    cloud_hunting: {
+      static_analysis: {
+        pending   : int,
+        skipped   : int,
+        completed : int,
+        failed    : int,
+      },
+      cloud_reputation: {
+        pending   : int,
+        skipped   : int,
+        completed : int,
+        failed    : int,
+      },
+      file_similarity_analytics: {
+        pending   : int,
+        skipped   : int,
+        completed : int,
+        failed    : int,
+      },
+      certificate_analytics: {
+        pending   : int,
+        skipped   : int,
+        completed : int,
+        failed    : int,
+      },
+      uri_analytics: {
+        pending   : int,
+        skipped   : int,
+        completed : int,
+        failed    : int,
+      },
+      advanced_search: {
+        pending   : int,
+        skipped   : int,
+        completed : int,
+        failed    : int,
+      }
+    },
+    local_hunting : [],  # (same as cloud)
+
+    att&ck: [
+      {
+        name        : str,
+        description : str,
+        techniques  : [
+          {
+            id                         : str,
+            name                       : str,
+            static_analysis_indicators : []
+          }
+        ]
+      }
+    ]
+}
