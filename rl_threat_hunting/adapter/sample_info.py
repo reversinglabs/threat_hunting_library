@@ -397,7 +397,10 @@ def extract_signer_certificates(tc_report):
 
 
 def extract_tc4_signer_certificates(tc_report):
-    signatures = tc_report.get('signatures', [])
+    signatures = tc_report.get('signatures')
+    if not signatures:
+        return
+    
     for signature in signatures:
         signer_certificate = signature.get('certificate')
         if signer_certificate:
