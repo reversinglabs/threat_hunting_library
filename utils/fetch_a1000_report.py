@@ -8,7 +8,7 @@ import requests
 
 urllib3.disable_warnings()
 
-TOKEN = 'f3644f073dd2c50cefb182e03553d4ab79d5c205'
+TOKEN = 'BadAcce55C0deBadAccessC0deBadAcce55C0deB'  # replace with a proper hex token
 
 utils_dir = os.path.dirname(os.path.abspath(__file__))
 DIRECTORY = os.path.join(utils_dir, '../tests/a1000_report/{}.json')
